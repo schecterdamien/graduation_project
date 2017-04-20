@@ -1,6 +1,5 @@
 from wxpy import *
-import time
-from db import Group_log, Person_log
+from db import GroupLog, PersonLog
 from nlp import response
 
 
@@ -18,7 +17,6 @@ def create_robot():
         receiver = msg.receiver.name
         sender_name = msg.member.name
         sender_id = msg.sender.wxid
-        receiver_id = msg.receiver.wxid
         if sender_id == 2442638283:
             group_name = receiver
         else:
@@ -26,10 +24,13 @@ def create_robot():
         content = msg.text
         msg_time = msg.create_time.strftime("%Y-%m-%d %H:%M:%S")
         is_at = str(msg.is_at)
-        dic = {'group_name': group_name, 'sender_name': sender_name, 'content': content,
-            'msg_time': msg_time, 'if_at': is_at} 
+        dic = {'group_name': group_name,
+               'sender_name': sender_name,
+               'content': content,
+               'msg_time': msg_time,
+               'if_at': is_at}
         print(dic)
-        Group_log.insert(dic)
+        GroupLog.insert(dic)
         answer = response(content)
         print(answer)
 
@@ -39,9 +40,11 @@ def create_robot():
         receiver_name = msg.receiver.name
         content = msg.text
         msg_time = msg.create_time.strftime("%Y-%m-%d %H:%M:%S")
-        dic = {'sender_name': sender_name, 'receiver_name': receiver_name, 'content': content, 
-            'msg_time': msg_time} 
-        Person_log.insert(dic)
+        dic = {'sender_name': sender_name,
+               'receiver_name': receiver_name,
+               'content': content,
+               'msg_time': msg_time}
+        PersonLog.insert(dic)
         print(dic)
         answer = response(content)
         print(answer)
@@ -54,4 +57,4 @@ def create_robot():
 
 
 if __name__ == "__main__":
-	create_robot()
+    create_robot()
