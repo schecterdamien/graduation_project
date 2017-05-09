@@ -41,7 +41,7 @@ def create_robot():
         content = msg.text
         msg_time = msg.create_time.strftime("%Y-%m-%d %H:%M:%S")
         dic = {'sender_name': sender_name,
-               'receiver_name': receiver_name,
+               'receiver_  name': receiver_name,
                'content': content,
                'msg_time': msg_time}
         PersonLog.insert(dic)
@@ -49,9 +49,20 @@ def create_robot():
         answer = response(content)
         print(answer)
 
-    @bot.register([xiache,yatou])
+    @bot.register([xiache, yatou], except_self=False)
     def reply_my_friend(msg):
-        tuling.do_reply(msg)
+        sender_name = msg.sender.name
+        receiver_name = msg.receiver.name
+        content = msg.text
+        msg_time = msg.create_time.strftime("%Y-%m-%d %H:%M:%S")
+        dic = {'sender_name': sender_name,
+               'receiver_  name': receiver_name,
+               'content': content,
+               'msg_time': msg_time}
+        PersonLog.insert(dic)
+        print(dic)
+        answer = response(content)
+        msg.reply(answer)
 
     embed()
 

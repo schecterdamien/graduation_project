@@ -1,2 +1,6 @@
-
+pymongo>=3.4.0
 wxpy>=0.3.3
+redis>=2.10.5
+hiredis>=0.2.0
+jieba>=0.38
+bson>=0.4.7
