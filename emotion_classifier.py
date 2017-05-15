@@ -84,22 +84,23 @@ def load_train_result():
 def emotion_recognition(sentence):
     emotion_words_set = init_emotion_words_set('corpus/NTUSD_vocabulary_simplified.txt')
     words = []
-    for word in jieba.cut(sentence):
+    for word in jieba.cut(sentence, cut_all=True):
         print(word)
         if word in emotion_words_set:
             words.append(word)
         else:
             print('词典没有这个词')
     angry_words_rate_dict, depressed_words_rate_dict, disgust_words_rate_dict, happy_words_rate_dict = load_train_result()
-    angry_likelihood_list = [angry_words_rate_dict.get(word) for word in words]
-    depressed_likelihood_list = [depressed_words_rate_dict.get(word) for word in words]
-    disgust_likelihood_list = [disgust_words_rate_dict.get(word) for word in words]
-    happy_likelihood_list = [happy_words_rate_dict.get(word) for word in words]
+
+    angry_likelihood_list = [1 - angry_words_rate_dict.get(word) if word not in words else angry_words_rate_dict.get(word) for word in
+                             emotion_words_set]
+    depressed_likelihood_list = [1 - depressed_words_rate_dict.get(word) if word not in words else depressed_words_rate_dict.get(word) for word in
+                                 emotion_words_set]
+    disgust_likelihood_list = [1 - disgust_words_rate_dict.get(word) if word not in words else disgust_words_rate_dict.get(word) for word in
+                               emotion_words_set]
+    happy_likelihood_list = [1 - happy_words_rate_dict.get(word) if word not in words else happy_words_rate_dict.get(word) for word in
+                             emotion_words_set]
     print(words)
-    print('angry_likelihood_list: %s' % angry_likelihood_list)
-    print('depressed_likelihood_list: %s' % depressed_likelihood_list)
-    print('disgust_likelihood_list: %s' % disgust_likelihood_list)
-    print('happy_likelihood_list: %s' % happy_likelihood_list)
     angry_likelihood = sum(map(lambda x: math.log(x), angry_likelihood_list))
     depressed_likelihood = sum(map(lambda x: math.log(x), depressed_likelihood_list))
     disgust_likelihood = sum(map(lambda x: math.log(x), disgust_likelihood_list))
@@ -119,6 +120,7 @@ def emotion_recognition(sentence):
 
 
 if __name__ == '__main__':
-    emotion_words_set = init_emotion_words_set('corpus/NTUSD_vocabulary_simplified.txt')
-    emotion_recognition('我真是牛逼啊')
+    # emotion_words_set = init_emotion_words_set('corpus/NTUSD_vocabulary_simplified.txt')
+    emotion_recognition('不高兴')
     # training()
+    # generate_corpus()
