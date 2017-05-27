@@ -1,5 +1,12 @@
-from utils import get_key_word
-from db import Template
+from utils import get_key_word, get_noun_word
+from db import Template, Angry, Depressed, Disgust, Happy
+from emotion_classifier import emotion_recognition
+
+
+emotion_map = {'angry': Angry,
+               'depressed': Depressed,
+               'disgust': Disgust,
+               'happy': Happy}
 
 
 def response(content):
@@ -51,6 +58,25 @@ def similarity_calculate(question_keys, template_keys):
     similarity = result1 / (result2 * result3) ** 0.5
     print('result1 = %s, result2 = %s result3 = %s similarity = %s' % (result1, result2, result3, similarity))
     return similarity
+
+
+def emotion_recognize(content):
+    answer_maps = {'angry': '别生气了，生气对身体不好',
+                   'happy': '小Z也很高兴啊,愿你天天都可以这么开心',
+                   'depressed': '假如生活欺骗了你，今天就多吃点',
+                   'disgust': '那个……我不是针对谁，我想说……在做的各位……都是……垃圾'}
+    emotion = emotion_recognition(content)
+    print(emotion)
+    if not emotion:
+        answer = '小Z没有识别到您的情感'
+        return answer
+    none_words = get_noun_word(content)
+    mongo_obj = emotion_map[emotion]
+    answer = mongo_obj.get(none_words)
+    if not answer:
+        answer = answer_maps[emotion]
+    print(answer)
+    return answer
 
 
 if __name__ == '__main__':

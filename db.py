@@ -3,11 +3,18 @@ from utils import *
 import redis
 from bson.objectid import ObjectId
 
+
 mongo_conn = MongoClient('localhost', 27017)
 mongo_db = mongo_conn.chat_log
+
 group_log = mongo_db.group_log
 person_log = mongo_db.person_log
 template = mongo_db.template
+
+angry = mongo_db.angry
+depressed = mongo_db.depressed
+disgust = mongo_db.disgust
+happy = mongo_db.happy
 
 re_conn = redis.Redis(host='localhost', port=6379)
 
@@ -26,12 +33,42 @@ class PersonLog(object):
         return person_log.insert(dic)
 
 
+class EmotionBase(object):
+    emotion = None
+
+    @classmethod
+    def insert(cls, answer):
+        none_word = get_noun_word(answer)
+        dict = {'answer': answer, 'term_word': none_word}
+        return cls.emotion.insert(dict)
+
+    @classmethod
+    def get(cls, words):
+        return list(cls.emotion.find({'term_word': {'$in': words}}))
+
+
+class Angry(EmotionBase):
+    emotion = angry
+
+
+class Depressed(EmotionBase):
+    emotion = depressed
+
+
+class Disgust(EmotionBase):
+    emotion = disgust
+
+
+class Happy(EmotionBase):
+    emotion = happy
+
+
 class Template(object):
 
     #两个插入需要加入异常捕获
     @classmethod
     def insert(cls, dic):
-        key_words = get_key_word(dic['question'])
+        key_words = get_all_word(dic['question'])
         dic['key_words'] = key_words
         mongo_id = str(template.insert(dic))
         for key_word in key_words:
@@ -48,7 +85,7 @@ class Template(object):
         print(key_words)
         for key_word in key_words:
             list_count = re_conn.llen(key_word)
-            print('%s关键字有%d个qa对' % (key_word, list_count))
+            # print('%s关键字有%d个qa对' % (key_word, list_count))
             for index in range(list_count):
                 obj_id = re_conn.lindex(key_word, index)
                 obj_id = obj_id.decode('ascii')
@@ -58,10 +95,10 @@ class Template(object):
                     candidate_dict[obj_id] = 1
                 if candidate_dict[obj_id] > max_num:
                     max_num = candidate_dict[obj_id]
-            print('经过%s关键字，最大值为：%d，列表为：' % (key_word, max_num))
-            print(candidate_dict)
-        print('最终得到最大值为：%d ,列表为:' % (max_num))
-        print(candidate_dict)
+            # print('经过%s关键字，最大值为：%d，列表为：' % (key_word, max_num))
+            # print(candidate_dict)
+        # print('最终得到最大值为：%d ,列表为:' % (max_num))
+        # print(candidate_dict)
         for obj_id, num in candidate_dict.items():
             if num == max_num:
                 max_set.add(obj_id)
@@ -75,6 +112,4 @@ class Template(object):
 
 
 if __name__ == '__main__':
-    # re_conn.rpush('test', 11, 22, 33)
-    # print(re_conn.lrange('测试', 0, -1))
-    print(Template.get_by_id('590975d2926d81a25bdf4b89'))
+    pass

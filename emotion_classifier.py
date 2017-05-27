@@ -9,7 +9,7 @@ def init_emotion_words_set(path):
         for word in file.readlines():
             word = word.rstrip('\n')
             emotion_words_set.add(word)
-    print('情感词典长度：%s' % len(emotion_words_set))
+    # print('情感词典长度：%s' % len(emotion_words_set))
     return emotion_words_set
 
 
@@ -44,10 +44,10 @@ def get_words_rate(words_frequency_dict, sum):
 
 def training():
     emotion_words_set = init_emotion_words_set('corpus/NTUSD_vocabulary_simplified.txt')
-    angry_train_sentences_list = init_train_sentences_list('corpus/emotion/angry.txt')
-    depressed_train_sentences_list = init_train_sentences_list('corpus/emotion/depressed.txt')
-    disgust_train_sentences_list = init_train_sentences_list('corpus/emotion/disgust.txt')
-    happy_train_sentences_list = init_train_sentences_list('corpus/emotion/happy.txt')
+    angry_train_sentences_list = init_train_sentences_list('corpus/emotion/train/angry.txt')
+    depressed_train_sentences_list = init_train_sentences_list('corpus/emotion/train/depressed.txt')
+    disgust_train_sentences_list = init_train_sentences_list('corpus/emotion/train/disgust.txt')
+    happy_train_sentences_list = init_train_sentences_list('corpus/emotion/train/happy.txt')
 
     angry_words_frequency_dict = get_words_frequency(emotion_words_set, angry_train_sentences_list)
     depressed_words_frequency_dict = get_words_frequency(emotion_words_set, depressed_train_sentences_list)
@@ -64,63 +64,129 @@ def training():
 
 
 def dump_train_result(angry_words_rate_dict, depressed_words_rate_dict, disgust_words_rate_dict, happy_words_rate_dict):
-    with open('emotion_train_result', "wb") as file:
+    with open('corpus/emotion/emotion_train_result', "wb") as file:
         pickle.dump(angry_words_rate_dict, file)
         pickle.dump(depressed_words_rate_dict, file)
         pickle.dump(disgust_words_rate_dict, file)
         pickle.dump(happy_words_rate_dict, file)
-    return 'emotion_train_result'
+    return 'success'
 
 
 def load_train_result():
-    with open('emotion_train_result', "rb") as file:
+    with open('corpus/emotion/emotion_train_result', "rb") as file:
         angry_words_rate_dict = pickle.load(file)
         depressed_words_rate_dict = pickle.load(file)
         disgust_words_rate_dict = pickle.load(file)
         happy_words_rate_dict = pickle.load(file)
-    return angry_words_rate_dict, depressed_words_rate_dict, disgust_words_rate_dict, happy_words_rate_dict
+        emotion_words_rate_dict = {'angry_words_rate_dict': angry_words_rate_dict,
+                                   'depressed_words_rate_dict': depressed_words_rate_dict,
+                                   'disgust_words_rate_dict': disgust_words_rate_dict,
+                                   'happy_words_rate_dict': happy_words_rate_dict
+                                   }
+    return emotion_words_rate_dict
 
 
-def emotion_recognition(sentence):
+def _emotion_recognition(sentence, emotion_words_rate_dict):
     emotion_words_set = init_emotion_words_set('corpus/NTUSD_vocabulary_simplified.txt')
     words = []
     for word in jieba.cut(sentence, cut_all=True):
-        print(word)
+        # print(word)
         if word in emotion_words_set:
             words.append(word)
+    if not words:
+        return 'fail'
+    angry_likelihood_list = []
+    depressed_likelihood_list = []
+    disgust_likelihood_list = []
+    happy_likelihood_list = []
+    for word in emotion_words_set:
+        if word in words:
+            angry_likelihood_list.append(emotion_words_rate_dict['angry_words_rate_dict'].get(word))
+            depressed_likelihood_list.append(emotion_words_rate_dict['depressed_words_rate_dict'].get(word))
+            disgust_likelihood_list.append(emotion_words_rate_dict['disgust_words_rate_dict'].get(word))
+            happy_likelihood_list.append(emotion_words_rate_dict['happy_words_rate_dict'].get(word))
         else:
-            print('词典没有这个词')
-    angry_words_rate_dict, depressed_words_rate_dict, disgust_words_rate_dict, happy_words_rate_dict = load_train_result()
+            angry_likelihood_list.append(1-emotion_words_rate_dict['angry_words_rate_dict'].get(word))
+            depressed_likelihood_list.append(1-emotion_words_rate_dict['depressed_words_rate_dict'].get(word))
+            disgust_likelihood_list.append(1-emotion_words_rate_dict['disgust_words_rate_dict'].get(word))
+            happy_likelihood_list.append(1-emotion_words_rate_dict['happy_words_rate_dict'].get(word))
 
-    angry_likelihood_list = [1 - angry_words_rate_dict.get(word) if word not in words else angry_words_rate_dict.get(word) for word in
-                             emotion_words_set]
-    depressed_likelihood_list = [1 - depressed_words_rate_dict.get(word) if word not in words else depressed_words_rate_dict.get(word) for word in
-                                 emotion_words_set]
-    disgust_likelihood_list = [1 - disgust_words_rate_dict.get(word) if word not in words else disgust_words_rate_dict.get(word) for word in
-                               emotion_words_set]
-    happy_likelihood_list = [1 - happy_words_rate_dict.get(word) if word not in words else happy_words_rate_dict.get(word) for word in
-                             emotion_words_set]
-    print(words)
+    # print(words)
     angry_likelihood = sum(map(lambda x: math.log(x), angry_likelihood_list))
     depressed_likelihood = sum(map(lambda x: math.log(x), depressed_likelihood_list))
     disgust_likelihood = sum(map(lambda x: math.log(x), disgust_likelihood_list))
     happy_likelihood = sum(map(lambda x: math.log(x), happy_likelihood_list))
-    print('angry_likelihood: %s ' % angry_likelihood)
-    print('depressed_likelihood: %s ' % depressed_likelihood)
-    print('disgust_likelihood: %s ' % disgust_likelihood)
-    print('happy_likelihood: %s ' % happy_likelihood)
+    # print('angry_likelihood: %s ' % angry_likelihood)
+    # print('depressed_likelihood: %s ' % depressed_likelihood)
+    # print('disgust_likelihood: %s ' % disgust_likelihood)
+    # print('happy_likelihood: %s ' % happy_likelihood)
     result_map = {'angry': angry_likelihood,
                   'depressed': depressed_likelihood,
                   'disgust': disgust_likelihood,
                   'happy': happy_likelihood}
 
     result = max(result_map.items(), key=lambda item: item[1])[0]
-    print(result)
+    # print(result)
     return result
 
 
+def emotion_recognition(sentence):
+    emotion_words_rate_dict = load_train_result()
+    result = _emotion_recognition(sentence, emotion_words_rate_dict)
+    return result
+
+
+def get_train_precision():
+    angry_test_sentences_list = init_train_sentences_list('corpus/emotion/test/angry.txt')
+    depressed_test_sentences_list = init_train_sentences_list('corpus/emotion/test/depressed.txt')
+    disgust_test_sentences_list = init_train_sentences_list('corpus/emotion/test/disgust.txt')
+    happy_test_sentences_list = init_train_sentences_list('corpus/emotion/test/happy.txt')
+    angry_test_result = 0
+    depressed_test_result = 0
+    disgust_test_result = 0
+    happy_test_result = 0
+    i = 0
+    emotion_words_rate_dict = load_train_result()
+    for sentence in angry_test_sentences_list:
+        result = _emotion_recognition(sentence, emotion_words_rate_dict)
+        i += 1
+        print(i)
+        if result == 'angry':
+            angry_test_result += 1
+    i = 0
+    print('anrgy_test')
+    for sentence in depressed_test_sentences_list:
+        result = _emotion_recognition(sentence, emotion_words_rate_dict)
+        i += 1
+        print(i)
+        if result == 'depressed':
+            depressed_test_result += 1
+    i = 0
+    print('depressed_test')
+    for sentence in disgust_test_sentences_list:
+        result = _emotion_recognition(sentence, emotion_words_rate_dict)
+        i += 1
+        print(i)
+        if result == 'disgust':
+            disgust_test_result += 1
+    i = 0
+    print('disgust_test')
+    for sentence in happy_test_sentences_list:
+        result = _emotion_recognition(sentence, emotion_words_rate_dict)
+        i += 1
+        print(i)
+        if result == 'happy':
+            happy_test_result += 1
+    print('happy_test')
+    print(angry_test_result, depressed_test_result, disgust_test_result, happy_test_result)
+
 if __name__ == '__main__':
     # emotion_words_set = init_emotion_words_set('corpus/NTUSD_vocabulary_simplified.txt')
-    emotion_recognition('不高兴')
+    # emotion_recognition('不高兴')
     # training()
+    # get_train_precision()
     # generate_corpus()
+    import jieba.posseg as psg
+    seg = psg.cut('天安门真有趣')
+    for i in seg:
+        print(i)
