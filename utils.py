@@ -6,6 +6,7 @@ import jieba.posseg as psg
 
 DEFAULT_IDF = 'corpus/idf.txt'
 DEFAULT_STOPWORD = 'corpus/stop_words.txt'
+DEFAULT_TEMPLATE = 'corpus/template/xiaohuangji.conv'
 
 
 class IDFLoader(object):
@@ -34,10 +35,10 @@ class IDFLoader(object):
 class StopWordLoader(object):
 
     def __init__(self, stop_word_path=DEFAULT_STOPWORD):
-        self.path = idf_path
+        self.path = stop_word_path
         self.stop_word_list = []
-        if idf_path:
-            self.init_stop_word_list(idf_path)
+        if stop_word_path:
+            self.init_stop_word_list(stop_word_path)
 
     def init_stop_word_list(self, new_idf_path):
         self.path = new_idf_path
@@ -67,10 +68,11 @@ class KeyWordHandle(object):
             word_freq[word] *= idf_freq.get(word, median_idf) / total
         result = sorted(word_freq, key=word_freq.__getitem__, reverse=True)
         key_word_list = result[:top_num]
+        result = {}
         for word in word_freq:
-            if word not in key_word_list:
-                word_freq.pop(word)
-        return word_freq
+            if word in key_word_list:
+                result[word] = word_freq[word]
+        return result
 
 
 def get_all_word(content):
@@ -88,30 +90,34 @@ def get_noun_word(content):
     return term_word
 
 
-def insert_conversition(conversition):
-    for count in range(len(conversition)-1):
-        dic = {'question': conversition[count],
-               'answer': conversition[count+1]}
-        if not Template.insert(dic):
-            return 'fail'
-    return 'success'
+class TemplateImportHandle():
 
+    def __init__(self):
+        self.key_word_hander = KeyWordHandle()
 
-def batch_import_template():
-    count = 0
-    with open('corpus/template/xiaohuangji.conv', 'r') as file:
-        conversition = []
-        for line in file.readlines():
-            line = line.strip()
-            if line[0] == 'E':
-                insert_conversition(conversition)
-                conversition = []
-            line = line[2:]
-            conversition.append(line)
-            count += 1
-            print(count)
-        insert_conversition(conversition)
+    def insert_conversition(self, conversition):
+        for count in range(len(conversition)-1):
+            dic = {'question': conversition[count].replace('.', ''),
+                   'answer': conversition[count+1]}
+            if not Template.insert(dic, self.key_word_hander):
+                return 'fail'
+        return 'success'
+
+    def batch_import_template(self):
+        count = 0
+        with open(DEFAULT_TEMPLATE, 'r') as file:
+            conversition = []
+            for line in file.readlines():
+                line = line.strip()
+                if line[0] == 'E':
+                    self.insert_conversition(conversition)
+                    conversition = []
+                else:
+                    line = line[2:]
+                    conversition.append(line)
+                    count += 1
+                    print(count)
 
 
 if __name__ == "__main__":
-    print(get_key_word('你是不是傻，天气不错啊'))
+    TemplateImportHandle.batch_import_template()

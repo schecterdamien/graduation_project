@@ -1,8 +1,8 @@
 from pymongo import MongoClient
+import traceback
 from utils import *
 import redis
 from bson.objectid import ObjectId
-
 
 mongo_conn = MongoClient('localhost', 27017)
 mongo_db = mongo_conn.chat_log
@@ -67,12 +67,18 @@ class Template(object):
 
     #两个插入需要加入异常捕获
     @classmethod
-    def insert(cls, dic):
-        key_words = get_all_word(dic['question'])
+    def insert(cls, dic, key_word_hander):
+        key_words = key_word_hander.get_key_word_list(dic['question'])
         dic['key_words'] = key_words
-        mongo_id = str(template.insert(dic))
-        for key_word in key_words:
-            re_conn.rpush(key_word, mongo_id)
+        print(dic)
+        try:
+            mongo_id = str(template.insert(dic))
+            for key_word in key_words:
+                re_conn.rpush(key_word, mongo_id)
+        except Exception:
+            print(dic)
+            traceback.print_exc()
+            return 'fail'
         if mongo_id:
             return 'success'
 

@@ -2,7 +2,7 @@ from wxpy import *
 from db import GroupLog, PersonLog
 from nlp import common_response, emotion_recognize
 from emotion_classifier import emotion_recognition
-from utils import insert_conversition
+from utils import TemplateImportHandle
 import re
 
 
@@ -49,7 +49,8 @@ def create_robot():
             answer = result['data']
         elif result['type'] == 'learning_pattern':
             conversition = [result['data']['question'], result['data']['answer']]
-            insert_result = insert_conversition(conversition)
+            template_import_handle = TemplateImportHandle()
+            insert_result = template_import_handle.insert_conversition(conversition)
             if insert_result == 'success':
                 answer = '小Z已经成功学习此问题了，快来试试吧！'
             else:
@@ -58,7 +59,7 @@ def create_robot():
         msg.reply(answer)
 
     # 私聊消息在这里处理
-    @bot.register(friends, except_self=False)
+    @bot.register([yatou], except_self=False)
     def reply_my_friend(msg):
         sender_name = msg.sender.name
         receiver_name = msg.receiver.name
@@ -69,13 +70,31 @@ def create_robot():
                'content': content,
                'msg_time': msg_time}
         PersonLog.insert(dic)
-        print(dic)
-        answer = common_response(content)
-        emotion = emotion_recognition(content)
-        if emotion == 'fail':
-            emotion = '机器人小z没有识别出情感，不妨进入调教模式，教教小z吧'
-        answer = answer + '\n**********************\n' + emotion
+        result = _user_content_process(content)
+        if result['type'] == 'normal':
+            answer = common_response(result['data'])
+        elif result['type'] == 'emotion_recognize':
+            answer = emotion_recognize(content)
+            emotion = emotion_recognition(content)
+            answer = answer + '\n*************\n' + emotion
+        elif result['type'] == 'help':
+            answer = result['data']
+        elif result['type'] == 'learning_pattern':
+            conversition = [result['data']['question'], result['data']['answer']]
+            template_import_handle = TemplateImportHandle()
+            insert_result = template_import_handle.insert_conversition(conversition)
+            if insert_result == 'success':
+                answer = '小Z已经成功学习此问题了，快来试试吧！'
+            else:
+                answer = '抱歉，学习过程出了些问题，请联系主人解决'
+        print(answer)
         msg.reply(answer)
+        # answer = common_response(content)
+        # emotion = emotion_recognition(content)
+        # if emotion == 'fail':
+        #     emotion = '机器人小z没有识别出情感，不妨进入调教模式，教教小z吧'
+        # answer = answer + '\n**********************\n' + emotion
+        # msg.reply(answer)
 
     # 管理员消息在这里处理
     @bot.register(admins, msg_types=TEXT, except_self=False)
@@ -110,7 +129,7 @@ def _admin_content_process(content):
 def _user_content_process(content):
     content = ''.join(content.split())
     help_msg = re.match('^help$', content)
-    learning_pattern = re.match('^/+(?P<question>.+)\n(?P<answer>.+)', content)
+    learning_pattern = re.match('^&(?P<question>.+)/?(?P<answer>.+)', content)
     emotion_model = re.match('^#', content)
     search_model = re.match('^搜索 (?P<sentence>.+)', content)
     if emotion_model:

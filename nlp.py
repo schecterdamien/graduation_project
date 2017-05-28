@@ -1,4 +1,4 @@
-from utils import get_key_word, get_noun_word
+from utils import *
 from db import Template, Angry, Depressed, Disgust, Happy
 from emotion_classifier import emotion_recognition
 
@@ -10,11 +10,12 @@ emotion_map = {'angry': Angry,
 
 
 def common_response(content):
-    key_words = get_key_word(content)
-    candidate_dict = Template.get_candidate_set(key_words)
+    key_word_hander = KeyWordHandle()
+    key_words = key_word_hander.get_key_word_list(content)
+    candidate_dict = Template.get_candidate_set(list(key_words))
     matching = {}
     if not candidate_dict:
-        return '无匹配模版'
+        return 'no result'
     for obj_id in candidate_dict:
         print('计算相似度------模版id为：%s ' % obj_id)
         template = Template.get_by_id(obj_id)
@@ -36,14 +37,8 @@ def similarity_calculate(question_keys, template_keys):
     qusetion_array = []
     template_array = []
     for key_word in keys_set:
-        if key_word in question_keys_set:
-            qusetion_array.append(1)
-        else:
-            qusetion_array.append(0)
-        if key_word in template_keys_set:
-            template_array.append(1)
-        else:
-            template_array.append(0)
+            qusetion_array.append(question_keys.get(key_word, 0.0))
+            template_array.append(template_keys.get(key_word, 0.0))
     print('待匹配向量为：')
     print(qusetion_array)
     print('模版向量为：')
