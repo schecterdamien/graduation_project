@@ -1,6 +1,6 @@
 from wxpy import *
 from db import GroupLog, PersonLog
-from nlp import response, emotion_recognize
+from nlp import common_response, emotion_recognize
 from emotion_classifier import emotion_recognition
 from utils import insert_conversition
 import re
@@ -40,7 +40,7 @@ def create_robot():
         GroupLog.insert(dic)
         result = _user_content_process(content)
         if result['type'] == 'normal':
-            answer = response(result['data'])
+            answer = common_response(result['data'])
         elif result['type'] == 'emotion_recognize':
             answer = emotion_recognize(content)
             emotion = emotion_recognition
@@ -65,12 +65,12 @@ def create_robot():
         content = msg.text
         msg_time = msg.create_time.strftime("%Y-%m-%d %H:%M:%S")
         dic = {'sender_name': sender_name,
-               'receiver_  name': receiver_name,
+               'receiver_name': receiver_name,
                'content': content,
                'msg_time': msg_time}
         PersonLog.insert(dic)
         print(dic)
-        answer = response(content)
+        answer = common_response(content)
         emotion = emotion_recognition(content)
         if emotion == 'fail':
             emotion = '机器人小z没有识别出情感，不妨进入调教模式，教教小z吧'

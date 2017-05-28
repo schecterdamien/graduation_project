@@ -9,7 +9,7 @@ emotion_map = {'angry': Angry,
                'happy': Happy}
 
 
-def response(content):
+def common_response(content):
     key_words = get_key_word(content)
     candidate_dict = Template.get_candidate_set(key_words)
     matching = {}
