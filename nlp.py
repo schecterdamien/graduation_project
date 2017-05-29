@@ -22,6 +22,7 @@ def common_response(content):
         similarity = similarity_calculate(question_keys=key_words, template_keys=template['key_words'])
         print('%s 模版相似度为 %s' % (obj_id, similarity))
         matching[obj_id] = similarity
+    print(matching)
     best_match_id = max(matching.items(), key=lambda item: item[1])[0]
     print(best_match_id)
     best_match_template = Template.get_by_id(best_match_id)
@@ -58,8 +59,7 @@ def similarity_calculate(question_keys, template_keys):
 def emotion_recognize(content):
     answer_maps = {'angry': '别生气了，生气对身体不好',
                    'happy': '小Z也很高兴啊,愿你天天都可以这么开心',
-                   'depressed': '假如生活欺骗了你，今天就多吃点',
-                   'disgust': '那个……我不是针对谁，我想说……在做的各位……都是……垃圾'}
+                   'depressed': '假如生活欺骗了你，今天就多吃点'}
     emotion = emotion_recognition(content)
     print(emotion)
     if not emotion:

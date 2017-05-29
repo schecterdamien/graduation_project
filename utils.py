@@ -1,12 +1,10 @@
 import jieba
 from jieba import analyse
-from db import *
 import jieba.posseg as psg
 
 
 DEFAULT_IDF = 'corpus/idf.txt'
 DEFAULT_STOPWORD = 'corpus/stop_words.txt'
-DEFAULT_TEMPLATE = 'corpus/template/xiaohuangji.conv'
 
 
 class IDFLoader(object):
@@ -90,34 +88,6 @@ def get_noun_word(content):
     return term_word
 
 
-class TemplateImportHandle():
-
-    def __init__(self):
-        self.key_word_hander = KeyWordHandle()
-
-    def insert_conversition(self, conversition):
-        for count in range(len(conversition)-1):
-            dic = {'question': conversition[count].replace('.', ''),
-                   'answer': conversition[count+1]}
-            if not Template.insert(dic, self.key_word_hander):
-                return 'fail'
-        return 'success'
-
-    def batch_import_template(self):
-        count = 0
-        with open(DEFAULT_TEMPLATE, 'r') as file:
-            conversition = []
-            for line in file.readlines():
-                line = line.strip()
-                if line[0] == 'E':
-                    self.insert_conversition(conversition)
-                    conversition = []
-                else:
-                    line = line[2:]
-                    conversition.append(line)
-                    count += 1
-                    print(count)
-
-
 if __name__ == "__main__":
-    TemplateImportHandle.batch_import_template()
+    key_word_handle = KeyWordHandle()
+    print(key_word_handle.get_key_word_list('你的名字叫什么'))

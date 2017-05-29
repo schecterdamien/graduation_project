@@ -1,8 +1,9 @@
 from wxpy import *
-from db import GroupLog, PersonLog
+from db import GroupLog, PersonLog, TemplateImportHandle
 from nlp import common_response, emotion_recognize
 from emotion_classifier import emotion_recognition
-from utils import TemplateImportHandle
+from utils import *
+from function_api import weather_response
 import re
 
 
@@ -17,6 +18,13 @@ def create_robot():
     for admin_name in admins_name:
         admin = bot.friends().search(admin_name)[0]
         admins.append(admin)
+
+    @bot.register(msg_types=FRIENDS)
+    def auto_accept_friends(msg):
+        print('test')
+        if '小z' in msg.text.lower():
+            new_friend = bot.accept_friend(msg.card)
+            new_friend.send('想和小z聊天直接发消息就行了,消息前缀为#就进入情感识别模式,消息前缀为&就进入调教模式，什么都不加就是普通模式')
 
     # 聊天群里的消息在这里处理
     @bot.register([xiache], msg_types=TEXT, except_self=False)
@@ -79,8 +87,12 @@ def create_robot():
             answer = answer + '\n*************\n' + emotion
         elif result['type'] == 'help':
             answer = result['data']
+        elif result['type'] == 'function_pattern':
+            data = result['data']
+            answer = weather_response(data)
         elif result['type'] == 'learning_pattern':
             conversition = [result['data']['question'], result['data']['answer']]
+            print(conversition)
             template_import_handle = TemplateImportHandle()
             insert_result = template_import_handle.insert_conversition(conversition)
             if insert_result == 'success':
@@ -89,12 +101,6 @@ def create_robot():
                 answer = '抱歉，学习过程出了些问题，请联系主人解决'
         print(answer)
         msg.reply(answer)
-        # answer = common_response(content)
-        # emotion = emotion_recognition(content)
-        # if emotion == 'fail':
-        #     emotion = '机器人小z没有识别出情感，不妨进入调教模式，教教小z吧'
-        # answer = answer + '\n**********************\n' + emotion
-        # msg.reply(answer)
 
     # 管理员消息在这里处理
     @bot.register(admins, msg_types=TEXT, except_self=False)
@@ -129,9 +135,9 @@ def _admin_content_process(content):
 def _user_content_process(content):
     content = ''.join(content.split())
     help_msg = re.match('^help$', content)
-    learning_pattern = re.match('^&(?P<question>.+)/?(?P<answer>.+)', content)
+    learning_pattern = re.match('^&(?P<question>.+)？(?P<answer>.+)', content)
     emotion_model = re.match('^#', content)
-    search_model = re.match('^搜索 (?P<sentence>.+)', content)
+    function = re.match('^天气：(?P<city>.+)', content)
     if emotion_model:
         content = content.strip('#')
         result = {'type': 'emotion_recognize',
@@ -143,6 +149,10 @@ def _user_content_process(content):
                      'answer': answer}
         result = {'type': 'learning_pattern',
                   'data': date_dict}
+    elif function:
+        key = function.groupdict()['city']
+        result = {'type': 'function_pattern',
+                  'data': key}
     elif help_msg:
         help_msg = '想和小z聊天直接发消息就行了,消息前缀为#就进入情感识别模式,消息前缀为&就进入调教模式，什么都不加就是普通模式'
         result = {'type': 'help',

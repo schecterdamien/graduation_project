@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 import traceback
-from utils import *
+from utils import get_noun_word, KeyWordHandle
 import redis
 from bson.objectid import ObjectId
 
@@ -17,6 +17,8 @@ disgust = mongo_db.disgust
 happy = mongo_db.happy
 
 re_conn = redis.Redis(host='localhost', port=6379)
+
+DEFAULT_TEMPLATE = 'corpus/template/xiaohuangji.conv'
 
 
 class GroupLog(object):
@@ -70,7 +72,6 @@ class Template(object):
     def insert(cls, dic, key_word_hander):
         key_words = key_word_hander.get_key_word_list(dic['question'])
         dic['key_words'] = key_words
-        print(dic)
         try:
             mongo_id = str(template.insert(dic))
             for key_word in key_words:
@@ -116,6 +117,41 @@ class Template(object):
     def get_by_id(cls, obj_id):
         return template.find_one({"_id": ObjectId(obj_id)})
 
+    @classmethod
+    def get_all(cls):
+        return template.find().count()
+
+
+class TemplateImportHandle():
+
+    def __init__(self):
+        self.key_word_hander = KeyWordHandle()
+
+    def insert_conversition(self, conversition):
+        for count in range(len(conversition)-1):
+            dic = {'question': conversition[count].replace('.', ''),
+                   'answer': conversition[count+1]}
+            if not Template.insert(dic, self.key_word_hander):
+                return 'fail'
+        return 'success'
+
+    def batch_import_template(self):
+        count = 0
+        with open(DEFAULT_TEMPLATE, 'r') as file:
+            conversition = []
+            for line in file.readlines():
+                line = line.strip()
+                if line[0] == 'E':
+                    self.insert_conversition(conversition)
+                    conversition = []
+                else:
+                    line = line[2:]
+                    conversition.append(line)
+                    count += 1
+                    print(count)
+
+    # def syn_from_mongo_to_redis(self):
 
 if __name__ == '__main__':
-    pass
+    templateImportHandle = TemplateImportHandle()
+    templateImportHandle.batch_import_template()
