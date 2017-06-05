@@ -62,7 +62,7 @@ def emotion_recognize(content):
                    'depressed': '假如生活欺骗了你，今天就多吃点'}
     emotion = emotion_recognition(content)
     print(emotion)
-    if not emotion:
+    if emotion == 'fail':
         answer = '小Z没有识别到您的情感'
         return answer
     none_words = get_noun_word(content)

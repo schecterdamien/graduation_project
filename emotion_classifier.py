@@ -87,6 +87,7 @@ def _emotion_recognition(sentence, emotion_words_rate_dict):
         # print(word)
         if word in emotion_words_set:
             words.append(word)
+    print(words)
     if not words:
         return 'fail'
     angry_likelihood_list = []

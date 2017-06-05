@@ -9,25 +9,23 @@ import re
 
 def create_robot():
     bot = Bot(console_qr=True)
-    groups = bot.groups()
+    # groups = bot.groups().search('测试')
     friends = bot.friends()
-    xiache = bot.groups().search('有梦就去追')[0]
-    yatou = bot.friends().search('丫头')[0]
-    admins_name = ['川']
+    admins_name = ['吴金晶']
     admins = []
-    for admin_name in admins_name:
-        admin = bot.friends().search(admin_name)[0]
-        admins.append(admin)
+    # for admin_name in admins_name:
+    #     admin = bot.friends().search(admin_name)[0]
+    #     admins.append(admin)
 
     @bot.register(msg_types=FRIENDS)
     def auto_accept_friends(msg):
         print('test')
-        if '小z' in msg.text.lower():
-            new_friend = bot.accept_friend(msg.card)
-            new_friend.send('想和小z聊天直接发消息就行了,消息前缀为#就进入情感识别模式,消息前缀为&就进入调教模式，什么都不加就是普通模式')
+        new_friend = bot.accept_friend(msg.card)
+        new_friend.send('想和小z聊天直接发消息就行了，消息前缀为#就进入情感识别模式，消息前缀为&就进入调教模式，'
+                        '想查询天气可以发送"天气：城市名"，什么都不加就是普通聊天模式，如果有疑问可以发送help查看帮助')
 
     # 聊天群里的消息在这里处理
-    @bot.register([xiache], msg_types=TEXT, except_self=False)
+    @bot.register(admins, msg_types=TEXT, except_self=False)
     def get_message2(msg):
         sender = msg.sender.name
         receiver = msg.receiver.name
@@ -49,6 +47,8 @@ def create_robot():
         result = _user_content_process(content)
         if result['type'] == 'normal':
             answer = common_response(result['data'])
+            if answer == 'no result':
+                answer = '小Z还不知道怎么回答这个问题，教教小Z吧。格式是: &问题？答复\n比如：&你的名字叫什么？小Z'
         elif result['type'] == 'emotion_recognize':
             answer = emotion_recognize(content)
             emotion = emotion_recognition
@@ -67,7 +67,7 @@ def create_robot():
         msg.reply(answer)
 
     # 私聊消息在这里处理
-    @bot.register([yatou], except_self=False)
+    @bot.register(friends, except_self=False)
     def reply_my_friend(msg):
         sender_name = msg.sender.name
         receiver_name = msg.receiver.name
@@ -81,6 +81,8 @@ def create_robot():
         result = _user_content_process(content)
         if result['type'] == 'normal':
             answer = common_response(result['data'])
+            if answer == 'no result':
+                answer = '小Z还不知道怎么回答这个问题，教教小Z吧。格式是: &问题？答复\n比如：&你的名字叫什么？小Z'
         elif result['type'] == 'emotion_recognize':
             answer = emotion_recognize(content)
             emotion = emotion_recognition(content)
@@ -103,7 +105,7 @@ def create_robot():
         msg.reply(answer)
 
     # 管理员消息在这里处理
-    @bot.register(admins, msg_types=TEXT, except_self=False)
+    @bot.register(admins, msg_types=TEXT)
     def get_message1(msg):
         sender_name = msg.sender.name
         receiver_name = msg.receiver.name
@@ -154,7 +156,15 @@ def _user_content_process(content):
         result = {'type': 'function_pattern',
                   'data': key}
     elif help_msg:
-        help_msg = '想和小z聊天直接发消息就行了,消息前缀为#就进入情感识别模式,消息前缀为&就进入调教模式，什么都不加就是普通模式'
+        help_msg = ('小Z暂时有4个功能，普通聊天，学习模式，情感识别，天气查询。\n'
+                    '1.消息前缀为#则为情感识别命令，小Z将识别#后面句子的情感。\n'
+                    '2.消息前缀为&即为调教命令，此时可以教小Z说话，调教的格式是: &问题？答复\n'
+                    ' 比如：&你的名字叫什么？小Z\n'
+                    ' (注意，这里的问号为中文字符)\n'
+                    '3.天气查询命令为 "天气：城市名"\n' 
+                    ' 比如：天气：武汉\n'
+                    '（注意，这里的冒号为中文字符）\n'
+                    '4.什么都不加就是普通模式')
         result = {'type': 'help',
                   'data': help_msg}
     else:
