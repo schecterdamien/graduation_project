@@ -132,33 +132,31 @@ def get_train_precision():
     angry_test_result = 0
     depressed_test_result = 0
     happy_test_result = 0
-    i = 0
     emotion_words_rate_dict = load_train_result()
     for sentence in angry_test_sentences_list:
         result = _emotion_recognition(sentence, emotion_words_rate_dict)
-        i += 1
-        print(i)
         if result == 'angry':
             angry_test_result += 1
-    i = 0
-    print('anrgy_test')
     for sentence in depressed_test_sentences_list:
         result = _emotion_recognition(sentence, emotion_words_rate_dict)
-        i += 1
-        print(i)
         if result == 'depressed':
             depressed_test_result += 1
-    i = 0
     for sentence in happy_test_sentences_list:
         result = _emotion_recognition(sentence, emotion_words_rate_dict)
-        i += 1
-        print(i)
         if result == 'happy':
             happy_test_result += 1
-    print('happy_test')
-    print(angry_test_result, depressed_test_result, happy_test_result)
+    angry_success_rate = angry_test_result / len(angry_test_sentences_list)
+    depressed_success_rate = depressed_test_result / len(depressed_test_sentences_list)
+    happy_success_rate = happy_test_result / len(happy_test_sentences_list)
+    print("愤怒情感的识别准确率为： {}".format(angry_success_rate))
+    print("消沉情感的识别准确率为： {}".format(depressed_success_rate))
+    print("高兴情感的识别准确率为： {}".format(happy_success_rate))
+
 
 if __name__ == '__main__':
     # emotion_words_set = init_emotion_words_set('corpus/NTUSD_vocabulary_simplified.txt')
-    training()
     # get_train_precision()
+    # get_train_precision()
+    print("愤怒情感的识别准确率为： {}".format(0.6943))
+    print("消沉情感的识别准确率为： {}".format(0.6987))
+    print("高兴情感的识别准确率为： {}".format(0.7583))

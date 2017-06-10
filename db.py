@@ -88,8 +88,8 @@ class Template(object):
         candidate_dict = {}
         max_num = 0
         max_set = set()
-        print('——————————————筛选候选集——————————————————————')
-        print(key_words)
+        print('————————————-------——-------筛选候选集——————————-------———————————--—')
+        print('问句的关键词向量为：{}'.format(key_words))
         for key_word in key_words:
             list_count = re_conn.llen(key_word)
             # print('%s关键字有%d个qa对' % (key_word, list_count))
@@ -109,8 +109,7 @@ class Template(object):
         for obj_id, num in candidate_dict.items():
             if num == max_num:
                 max_set.add(obj_id)
-        print('最终筛选集为:')
-        print(max_set)
+        print('候选集为: {}'.format(max_set))
         return max_set
 
     @classmethod

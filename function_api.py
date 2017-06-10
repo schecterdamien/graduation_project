@@ -27,19 +27,22 @@ def weather_request(city):
 
 
 def weather_response(city):
-    weather_data = weather_request(city)
-    response = ('小z天气查询\n'
-                '城市名称：{0[city]}\n'
-                '当前温度：{0[temp]}度\n'
-                '风向：{0[wind_direction]}\n'
-                '风力：{0[wind_strength]}\n'
-                '湿度：{0[humidity]}\n'
-                '更新时间：{0[time]}\n'
-                '今日温度：{0[temperature]}\n'
-                '天气：{0[weather]}\n'
-                '气温描述：{0[dressing_index]}\n'
-                '着装建议：{0[dressing_advice]}')
-    response = response.format(weather_data)
+    try:
+        weather_data = weather_request(city)
+        response = ('小z天气查询\n'
+                    '城市名称：{0[city]}\n'
+                    '当前温度：{0[temp]}度\n'
+                    '风向：{0[wind_direction]}\n'
+                    '风力：{0[wind_strength]}\n'
+                    '湿度：{0[humidity]}\n'
+                    '更新时间：{0[time]}\n'
+                    '今日温度：{0[temperature]}\n'
+                    '天气：{0[weather]}\n'
+                    '气温描述：{0[dressing_index]}\n'
+                    '着装建议：{0[dressing_advice]}')
+        response = response.format(weather_data)
+    except TypeError:
+        return 'no city!'
     return response
 if __name__ == '__main__':
     weather_response('武汉')

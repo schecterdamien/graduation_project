@@ -10,6 +10,7 @@ emotion_map = {'angry': Angry,
 
 
 def common_response(content):
+    print('问句原文： {}'.format(content))
     key_word_hander = KeyWordHandle()
     key_words = key_word_hander.get_key_word_list(content)
     candidate_dict = Template.get_candidate_set(list(key_words))
@@ -17,15 +18,16 @@ def common_response(content):
     if not candidate_dict:
         return 'no result'
     for obj_id in candidate_dict:
-        print('计算相似度------模版id为：%s ' % obj_id)
+        print('-----------计算相似度---------模版id为：%s -------------' % obj_id)
         template = Template.get_by_id(obj_id)
         similarity = similarity_calculate(question_keys=key_words, template_keys=template['key_words'])
-        print('%s 模版相似度为 %s' % (obj_id, similarity))
+        print('计算得到 %s 模版和问句相似度为 %s' % (obj_id, similarity))
         matching[obj_id] = similarity
-    print(matching)
+    print('-------------------------------最终匹配结果-------------------------------')
     best_match_id = max(matching.items(), key=lambda item: item[1])[0]
-    print(best_match_id)
+    print('最匹配模版的id为：{}    相似度为：{}'.format(best_match_id, matching[best_match_id]))
     best_match_template = Template.get_by_id(best_match_id)
+    print('最匹配模版中的问题为：{}    答案为：{}'.format(best_match_template['question'], best_match_template['answer']))
     return best_match_template['answer']
 
 
@@ -33,17 +35,16 @@ def similarity_calculate(question_keys, template_keys):
     question_keys_set = set(question_keys)
     template_keys_set = set(template_keys)
     keys_set = question_keys_set | template_keys_set
-    print('共有的关键字集合为：')
-    print(keys_set)
+    print('用户问句关键字集合为：{}'.format(question_keys_set))
+    print('待计算模版关键字集合为：{}'.format(template_keys_set))
+    print('关键字集合并集为：{}'.format(keys_set))
     qusetion_array = []
     template_array = []
     for key_word in keys_set:
             qusetion_array.append(question_keys.get(key_word, 0.0))
             template_array.append(template_keys.get(key_word, 0.0))
-    print('待匹配向量为：')
-    print(qusetion_array)
-    print('模版向量为：')
-    print(template_array)
+    print('用户问句词向量为：{}'.format(qusetion_array))
+    print('待计算模版词向量为：{}'.format(template_array))
     result1 = 0.0
     result2 = 0.0
     result3 = 0.0
@@ -52,7 +53,6 @@ def similarity_calculate(question_keys, template_keys):
         result2 += qusetion_array[i] ** 2
         result3 += template_array[i] ** 2
     similarity = result1 / (result2 * result3) ** 0.5
-    print('result1 = %s, result2 = %s result3 = %s similarity = %s' % (result1, result2, result3, similarity))
     return similarity
 
 

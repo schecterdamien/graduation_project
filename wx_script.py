@@ -92,16 +92,17 @@ def create_robot():
         elif result['type'] == 'function_pattern':
             data = result['data']
             answer = weather_response(data)
+            if answer == 'no city!':
+                answer = '小Z目前不能查询到这个城市的天气信息'
         elif result['type'] == 'learning_pattern':
             conversition = [result['data']['question'], result['data']['answer']]
-            print(conversition)
             template_import_handle = TemplateImportHandle()
             insert_result = template_import_handle.insert_conversition(conversition)
             if insert_result == 'success':
                 answer = '小Z已经成功学习此问题了，快来试试吧！'
             else:
                 answer = '抱歉，学习过程出了些问题，请联系主人解决'
-        print(answer)
+        print('回复为: {}'.format(answer))
         msg.reply(answer)
 
     # 管理员消息在这里处理
